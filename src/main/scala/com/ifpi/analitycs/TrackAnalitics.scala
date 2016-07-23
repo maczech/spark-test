@@ -1,36 +1,33 @@
 package com.ifpi.analitycs
 
+import java.util
+
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
+import org.apache.hadoop.dynamodb.DynamoDBItemWritable
+import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.hadoop.io.Text
 
 /**
   * Created by IFPI on 22/07/2016.
   */
-object TrackAnalytics extends App{
- lazy val inputPath = args(0)
- lazy val outputPath = args(1)
+object TrackAnalytics extends App {
+
+  import TrackAnalyticsOperations._
+
+  lazy val inputPath = args(0)
   val sparkConfig = new SparkConf().setAppName("Track Analytics")
 
-  val sc = new SparkContext(sparkConfig)
+  implicit val sc = new SparkContext(sparkConfig)
 
-  val sqlContext = new HiveContext(sc)
+  implicit val sqlContext = new HiveContext(sc)
 
   val tracksMetadata = sqlContext.read.json(inputPath)
 
-  tracksMetadata.registerTempTable("tracks")
+  val tracks = tracksMetadata.trackData
 
-  val trackDetails = sqlContext.sql("select link, title.titlename, artist.artist from tracks")
-    .rdd.map(row => (row(0),row(1),row(2))).filter(_._1 != null).cache
-
-  val linksPerArtist = trackDetails.keyBy(_._3).groupByKey().map{ case (artist, records) =>
-   (artist, records.size)
-  }
-
- val linksPerTitle = trackDetails.keyBy(_._2).groupByKey().map{ case (title, records) =>
-  (title, records.size)
- }
-
- linksPerArtist.saveAsTextFile(s"${outputPath}/artists")
- linksPerTitle.saveAsTextFile(s"${outputPath}/title")
+  tracks.linksPerArtist().saveArtistsInDynamoDB
+  tracks.linksPerTitle().saveTitlesInDynamoDB
 }
