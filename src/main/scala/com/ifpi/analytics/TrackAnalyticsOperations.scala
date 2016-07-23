@@ -1,4 +1,4 @@
-package com.ifpi.analitycs
+package com.ifpi.analytics
 
 import java.util
 
@@ -7,9 +7,8 @@ import org.apache.hadoop.dynamodb.DynamoDBItemWritable
 import org.apache.hadoop.io.Text
 import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.SparkContext
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, SQLContext}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.hive.HiveContext
 
 
 
@@ -18,13 +17,13 @@ object TrackAnalyticsOperations {
   type Artist = String
   type Title = String
   type Count = Int
-  type TrackData = (Link, Artist, Title)
+  type TrackData = (Link, Title, Artist)
   type ArtistsCount = (Artist, Count)
   type TitlesCount = (Title, Count)
 
   implicit class pimpedTrackAnalyticsDataFrame(val self: DataFrame) extends AnyVal {
 
-    def trackData(implicit sqlContext: HiveContext): RDD[TrackData] = {
+    def trackData(implicit sqlContext: SQLContext): RDD[TrackData] = {
       self.registerTempTable("tracks")
 
       sqlContext.sql("select link, title.titlename, artist.artist from tracks")

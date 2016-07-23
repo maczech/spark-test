@@ -1,4 +1,4 @@
-package com.ifpi.analitycs
+package com.ifpi.analytics
 
 import java.util
 
