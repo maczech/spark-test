@@ -60,14 +60,15 @@ object TrackAnalyticsOperations {
 
 
   def saveInDynamoDB(rdd:RDD[(String, Int)],tableName:String, partitionKey: String)(implicit sc:SparkContext): Unit = {
+    val region = sc.getConf.get("region")
     var ddbConf = new JobConf(sc.hadoopConfiguration)
     ddbConf.set("dynamodb.output.tableName", tableName)
     ddbConf.set("dynamodb.throughput.write.percent", "0.5")
     ddbConf.set("mapred.input.format.class", "org.apache.hadoop.dynamodb.read.DynamoDBInputFormat")
     ddbConf.set("mapred.output.format.class", "org.apache.hadoop.dynamodb.write.DynamoDBOutputFormat")
     ddbConf.set("dynamodb.servicename", "dynamodb")
-    ddbConf.set("dynamodb.endpoint", "dynamodb.eu-west-1.amazonaws.com")
-    ddbConf.set("dynamodb.regionid", "eu-west-1")
+    ddbConf.set("dynamodb.endpoint", s"dynamodb.$region.amazonaws.com")
+    ddbConf.set("dynamodb.regionid", region)
 
     var ddbInsertFormattedRDD = rdd.map(row => {
       var ddbMap = new util.HashMap[String, AttributeValue]()

@@ -3,7 +3,6 @@ package com.ifpi.analytics
 import org.scalatest.{Matchers, WordSpec}
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row, SQLContext}
-import org.apache.spark.sql.hive.HiveContext
 
 class TrackAnalyticsOperationsSpec extends WordSpec with Matchers with SparkTestSupport {
 
